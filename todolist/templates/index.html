@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load django_htmx %}
+{% load widget_tweaks %}
+{% load partials %}
+{% block content %}
+
+<div class="flex flex-col items-center mx-10 md:mx-20 ">
+
+    <!-- Form Section -->
+    <div class="mb-8 max-w-md bg-grey-100 shadow-[rgba(0,_0,_0,_0.4)_0px_30px_90px] p-6 rounded-lg">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Add New Task</h2>
+        <form hx-post="{% url 'submit-todo' %}" hx-target="#todo-table-body" hx-swap="beforeend" hx-on::after-request="this.reset()">
+            <div class="mb-4">
+                <label for="task_description" class="text-lg font-semibold mb-2">Task Description</label>
+                {% render_field form.description id="task_description" class="input input-bordered rounded-md focus:ring-yellow-500 focus:border-yellow-500" %}
+            </div>
+            <div class="mb-4">
+                <label for="is_completed" class="text-lg font-semibold mb-2">Is Completed?</label>
+                {% render_field form.is_completed id="is_completed" class="checkbox checkbox-accent" %}
+            </div>
+            <button type="submit" class="btn btn-success py-2 px-4 rounded-md hover:bg-green-600 hover:text-white transition duration-300 ease-in-out">
+                Submit
+            </button>
+        </form>
+    </div>
+
+    <!-- Table Section -->
+    <div class="w-full table-fixed rounded-md overflow-hidden border border-gray-300 shadow-md">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Task List</h2>
+        <table class="w-full">
+            <thead class="bg-gray-900 text-white">
+                <tr>
+                    <th class="w-1/3 py-2 px-4 border-r border-gray-300 font-bold text-black ">Description</th>
+                    <th class="w-1/4 py-2 px-4 border-r border-gray-300">Created</th>
+                    <th class="w-1/4 py-2 px-4 border-r border-gray-300">Completed</th>
+                    <th class="w-1/4 py-2 px-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="todo-table-body">
+                {% for todo in todos %}
+                    {% partialdef todoitem-partial inline=True %}
+                    <tr class="hover:bg-gray-700 transition duration-300 ease-in-out">
+                        <td class="py-2 px-4 border-r border-gray-300">{{ todo.description }}</td>
+                        <td class="py-2 px-4 border-r border-gray-300">{{ todo.created_at }}</td>
+                        <td class="py-2 px-4 border-r border-gray-300">{{ todo.is_completed }}</td>
+                        <td class="py-2 px-4">
+                            {% if not todo.is_completed %}
+                                <button class="btn btn-xs btn-success py-1 px-2 rounded-md hover:bg-green-600 hover:text-white transition duration-300 ease-in-out" hx-post="{% url 'complete-todo' todo.pk %}" hx-target="closest tr" hx-swap="outerHTML">Mark Complete</button>
+                            {% endif %}
+                            <button class="btn btn-xs btn-secondary py-1 px-2 rounded-md hover:bg-gray-600 hover:text-white transition duration-300 ease-in-out" hx-delete="{% url 'delete-todo' todo.pk %}" hx-on:delete-todo="this.closest('tr').remove()">Delete</button>
+                        </td>
+                    </tr>
+                    {% endpartialdef %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
